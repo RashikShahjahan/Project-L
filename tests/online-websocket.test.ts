@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
 import { once } from 'node:events'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
 import WebSocket from 'ws'
 import { startServer } from '../server/index.js'
@@ -55,12 +58,65 @@ const isType = <T extends ServerMessage['type']>(type: T) => (message: ServerMes
 const isRoom = (message: ServerMessage): message is RoomSnapshot => message.type === 'room'
 const roomAfter = (revision: number) => (message: ServerMessage): message is RoomSnapshot => message.type === 'room' && message.revision > revision
 
+test('WebSocket sessions reconnect after a server restart and retry an applied decision once', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'project-l-websocket-'))
+  const databasePath = join(directory, 'rooms.sqlite')
+  let server: Awaited<ReturnType<typeof startServer>> | undefined
+  const peers: Peer[] = []
+  const connect = async (): Promise<Peer> => {
+    const peer = new Peer(`ws://127.0.0.1:${server!.port}/ws`)
+    peers.push(peer)
+    await peer.ready()
+    return peer
+  }
+  try {
+    server = await startServer({ port: 0, host: '127.0.0.1', databasePath })
+    const host = await connect()
+    const guest = await connect()
+    host.send({ type: 'create', name: 'Host' })
+    const created = await host.next(isType('created'))
+    await host.next(isRoom)
+    guest.send({ type: 'join', roomCode: created.roomCode, name: 'Guest' })
+    const joined = await guest.next(isType('joined'))
+    await guest.next(isRoom)
+    const lobby = await host.next(isRoom)
+    host.send({ type: 'start', commandId: 'start', expectedRevision: lobby.revision })
+    await host.next(isType('ack'))
+    const started = await host.next(roomAfter(lobby.revision))
+    const active = started.view!.activePlayerId === created.playerId ? created : joined
+    const actor = active === created ? host : guest
+    const decision: ReplayDecision = { type: 'action', action: { type: 'take', source: 'deck', deck: 'black' } }
+    actor.send({ type: 'decision', commandId: 'saved-move', expectedRevision: started.revision, decision })
+    const accepted = await actor.next(isType('ack'))
+    const before = await actor.next(roomAfter(started.revision))
+    // Stop with live sockets, exercising socket and database shutdown together.
+    await server.close()
+    server = undefined
+    server = await startServer({ port: 0, host: '127.0.0.1', databasePath })
+    const replacement = await connect()
+    replacement.send({ type: 'reconnect', roomCode: created.roomCode, token: active.token })
+    await replacement.next(isType('reconnected'))
+    const restored = await replacement.next(isRoom)
+    assert.deepEqual(restored.view, before.view)
+    assert.equal(restored.revision, before.revision)
+    assert.equal(restored.room.seats.filter((seat) => seat.connected).length, 1)
+    replacement.send({ type: 'decision', commandId: 'saved-move', expectedRevision: started.revision, decision })
+    assert.equal((await replacement.next(isType('ack'))).revision, accepted.revision)
+    replacement.send({ type: 'decision', commandId: 'next-move', expectedRevision: restored.revision, decision })
+    assert.equal((await replacement.next(isType('ack'))).revision, restored.revision + 1)
+  } finally {
+    await Promise.all(peers.map((peer) => peer.close()))
+    await server?.close()
+    rmSync(directory, { recursive: true, force: true })
+  }
+})
+
 test('two WebSocket clients play a complete authoritative game and receive private views', async () => {
   let server: Awaited<ReturnType<typeof startServer>> | undefined
   let host: Peer | undefined
   let guest: Peer | undefined
   try {
-    server = await startServer({ port: 0, host: '127.0.0.1', roomService: new RoomService({ randomSeed: () => 31 }) })
+    server = await startServer({ port: 0, host: '127.0.0.1', roomService: new RoomService({ databasePath: ':memory:', randomSeed: () => 31 }) })
     host = new Peer(`ws://127.0.0.1:${server.port}/ws`)
     guest = new Peer(`ws://127.0.0.1:${server.port}/ws`)
     await Promise.all([host.ready(), guest.ready()])
@@ -162,7 +218,7 @@ test('two WebSocket clients play a complete authoritative game and receive priva
 })
 
 test('WebSocket reconnect replaces the old socket and retries an already-applied pending command', async () => {
-  const server = await startServer({ port: 0, host: '127.0.0.1', roomService: new RoomService({ randomSeed: () => 41 }) })
+  const server = await startServer({ port: 0, host: '127.0.0.1', roomService: new RoomService({ databasePath: ':memory:', randomSeed: () => 41 }) })
   const peers: Peer[] = []
   const connect = async (): Promise<Peer> => {
     const peer = new Peer(`ws://127.0.0.1:${server.port}/ws`)
@@ -213,7 +269,7 @@ test('WebSocket reconnect replaces the old socket and retries an already-applied
 
 
 test('WebSocket lobby leave transfers hosting and an unsent start survives reconnect', async () => {
-  const server = await startServer({ port: 0, host: '127.0.0.1' })
+  const server = await startServer({ port: 0, host: '127.0.0.1', databasePath: ':memory:' })
   const peers: Peer[] = []
   const connect = async () => {
     const peer = new Peer(`ws://127.0.0.1:${server.port}/ws`)

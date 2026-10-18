@@ -9,8 +9,8 @@ import type { ServerMessage } from '../src/online/protocol.js'
 
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' }
 export interface RunningServer { readonly server: ReturnType<typeof createHttpServer>; readonly rooms: RoomService; readonly port: number; close(): Promise<void> }
-export async function startServer(options: { port?: number; host?: string; staticDir?: string; roomService?: RoomService; frontendOrigin?: string } = {}): Promise<RunningServer> {
-  const rooms = options.roomService ?? new RoomService()
+export async function startServer(options: { port?: number; host?: string; staticDir?: string; roomService?: RoomService; databasePath?: string; frontendOrigin?: string } = {}): Promise<RunningServer> {
+  const rooms = options.roomService ?? new RoomService({ databasePath: options.databasePath })
   const staticDir = options.staticDir ?? resolve(process.cwd(), 'dist')
   const server = createHttpServer((req, res) => {
     if (req.url === '/health' || req.url === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount() })); return }
@@ -83,7 +83,12 @@ export async function startServer(options: { port?: number; host?: string; stati
     ws.isAlive = true
   })
   const port = options.port ?? Number(process.env.PORT ?? 8787)
-  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, options.host ?? '0.0.0.0', () => { server.off('error', reject); resolve() }) })
+  try {
+    await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, options.host ?? '0.0.0.0', () => { server.off('error', reject); resolve() }) })
+  } catch (error) {
+    await rooms.close()
+    throw error
+  }
   const heartbeat = setInterval(() => {
     for (const ws of wss.clients) {
       if (ws.isAlive === false) { ws.terminate(); continue }
@@ -93,7 +98,15 @@ export async function startServer(options: { port?: number; host?: string; stati
   }, 30_000)
   const address = server.address()
   const actualPort = typeof address === 'object' && address ? address.port : port
-  return { server, rooms, port: actualPort, close: async () => { clearInterval(heartbeat); for (const ws of wss.clients) ws.close(); await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())) } }
+  return { server, rooms, port: actualPort, close: async () => {
+    clearInterval(heartbeat)
+    for (const ws of wss.clients) ws.close()
+    await Promise.all([
+      new Promise<void>((resolve, reject) => wss.close((error) => error ? reject(error) : resolve())),
+      new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
+    ])
+    await rooms.close()
+  } }
 }
 function sendError(send: (message: ServerMessage) => void, error: unknown, commandId?: string): void {
   const code = error instanceof RoomError ? error.code : 'server_error'
@@ -103,5 +116,15 @@ function sendError(send: (message: ServerMessage) => void, error: unknown, comma
 
 declare module 'ws' { interface WebSocket { isAlive?: boolean } }
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  void startServer({ frontendOrigin: process.env.FRONTEND_ORIGIN }).then(({ port }) => console.log(`Project L server listening on ${port}`)).catch((error: unknown) => { console.error(error); process.exitCode = 1 })
+  void startServer({ frontendOrigin: process.env.FRONTEND_ORIGIN }).then((running) => {
+    console.log(`Project L server listening on ${running.port}`)
+    let stopping = false
+    const stop = (): void => {
+      if (stopping) return
+      stopping = true
+      void running.close().catch((error: unknown) => { console.error(error); process.exitCode = 1 })
+    }
+    process.once('SIGINT', stop)
+    process.once('SIGTERM', stop)
+  }).catch((error: unknown) => { console.error(error); process.exitCode = 1 })
 }

@@ -24,3 +24,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SQLite room state and journal files
+*.sqlite
+*.sqlite-*

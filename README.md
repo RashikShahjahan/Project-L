@@ -4,7 +4,7 @@ A browser implementation of the Project L base game. It supports 2–4 human pla
 
 ## Development
 
-Use Node.js 20.19+ on the 20.x line, or 22.12+ (newer supported major versions also work), and npm.
+Use Node.js 22.13+ and npm. The server uses Node's built-in SQLite support.
 
 ```sh
 npm ci
@@ -31,7 +31,7 @@ The build runs TypeScript checks and writes the production app to `dist/`. Previ
 
 ## Online multiplayer
 
-The server owns the game and keeps rooms in memory; see [docs/project-l/online.md](docs/project-l/online.md) for local multi-browser setup and single-instance HTTPS/WSS deployment.
+The server owns the game and saves rooms, player sessions, game state, and command retry history to `data/project-l.sqlite`. Set `DATABASE_PATH` to choose another location. Rooms survive server restarts and expire after two hours of inactivity; see [docs/project-l/online.md](docs/project-l/online.md) for local multi-browser setup and single-instance HTTPS/WSS deployment.
 
 ## Project layout
 

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { RoomStore } from './room-store.js'
 import { observe } from '../src/game/observation.js'
 import { applyDecision } from '../src/game/replay.js'
 import type { ReplayDecision } from '../src/game/replay.js'
@@ -15,22 +16,35 @@ interface Seat { playerId: string; name: string; token: string; connectionId: st
 interface Room {
   code: string; hostPlayerId: string; seats: Seat[]; state: GameState | null; revision: number
   lastActivity: number; decisions: Map<string, { fingerprint: string; revision: number }>
-  mutex: Promise<void>
 }
 const randomToken = (bytes = 24): string => randomBytes(bytes).toString('base64url')
 const roomCode = (): string => randomBytes(4).toString('hex').toUpperCase()
 
-/** In-memory room authority. Publish callbacks are connection-scoped and replaced on reconnect. */
+/** SQLite room authority. Only connections and command queues are process-local. */
 export class RoomService {
-  private readonly rooms = new Map<string, Room>()
+  private readonly store: RoomStore
+  private readonly queues = new Map<string, Promise<void>>()
   private readonly connections = new Map<string, { roomCode: string; playerId: string; publish: (snapshot: ServerMessage) => void; close?: () => void }>()
   private readonly options: { ttlMs?: number; now?: () => number; randomSeed?: () => number }
-  constructor(options: { ttlMs?: number; now?: () => number; randomSeed?: () => number } = {}) { this.options = options }
+  constructor(options: { databasePath?: string; ttlMs?: number; now?: () => number; randomSeed?: () => number } = {}) {
+    this.options = options
+    this.store = new RoomStore(options.databasePath ?? process.env.DATABASE_PATH ?? 'data/project-l.sqlite')
+    this.sweepExpired()
+  }
   private now(): number { return (this.options.now ?? Date.now)() }
   private room(code: string): Room {
-    const room = this.rooms.get(code.toUpperCase())
-    if (!room) throw new RoomError('room_missing', 'Room was not found or has expired')
+    const stored = this.store.get(code.toUpperCase())
+    if (!stored) throw new RoomError('room_missing', 'Room was not found or has expired')
+    const room: Room = { ...stored, seats: stored.seats.map((seat) => ({ ...seat, connectionId: null })), decisions: new Map(stored.decisions) }
+    for (const [connectionId, client] of this.connections) {
+      if (client.roomCode !== room.code) continue
+      const seat = room.seats.find((item) => item.playerId === client.playerId)
+      if (seat) seat.connectionId = connectionId
+    }
     return room
+  }
+  private save(room: Room): void {
+    this.store.save({ ...room, seats: room.seats.map(({ playerId, name, token }) => ({ playerId, name, token })), decisions: [...room.decisions] })
   }
   private link(room: Room, playerId: string, connectionId?: string, publish?: (snapshot: ServerMessage) => void, close?: () => void): void {
     const seat = room.seats.find((item) => item.playerId === playerId)!
@@ -40,11 +54,11 @@ export class RoomService {
       previous?.close?.()
     }
     seat.connectionId = connectionId ?? null
-    if (connectionId && publish) this.connections.set(connectionId, { roomCode: room.code, playerId, publish, close })
+    if (connectionId) this.connections.set(connectionId, { roomCode: room.code, playerId, publish: publish ?? (() => {}), close })
   }
   isConnectionActive(code: string, playerId: string, connectionId: string): boolean {
-    const room = this.rooms.get(code)
-    return room?.seats.some((seat) => seat.playerId === playerId && seat.connectionId === connectionId) ?? false
+    const client = this.connections.get(connectionId)
+    return client?.roomCode === code.toUpperCase() && client.playerId === playerId
   }
   private touch(room: Room): void { room.lastActivity = this.now() }
   private info(room: Room): RoomInfo {
@@ -77,10 +91,10 @@ export class RoomService {
   createRoom(name: string, connectionId?: string, publish?: (snapshot: ServerMessage) => void, close?: () => void): { roomCode: string; playerId: string; token: string } {
     this.validateName(name)
     let code = roomCode()
-    while (this.rooms.has(code)) code = roomCode()
+    while (this.store.get(code)) code = roomCode()
     const seat = { playerId: randomToken(9), name: name.trim(), token: randomToken(), connectionId: null }
-    const room: Room = { code, hostPlayerId: seat.playerId, seats: [seat], state: null, revision: 0, lastActivity: this.now(), decisions: new Map(), mutex: Promise.resolve() }
-    this.rooms.set(code, room)
+    const room: Room = { code, hostPlayerId: seat.playerId, seats: [seat], state: null, revision: 0, lastActivity: this.now(), decisions: new Map() }
+    this.save(room)
     this.link(room, seat.playerId, connectionId, publish, close)
     return { roomCode: code, playerId: seat.playerId, token: seat.token }
   }
@@ -91,9 +105,10 @@ export class RoomService {
     if (room.seats.length >= 4) throw new RoomError('room_full', 'This room already has four players')
     const seat = { playerId: randomToken(9), name: name.trim(), token: randomToken(), connectionId: null }
     room.seats.push(seat)
-    this.link(room, seat.playerId, connectionId, publish, close)
     this.touch(room)
     room.revision += 1
+    this.save(room)
+    this.link(room, seat.playerId, connectionId, publish, close)
     this.broadcast(room)
     return { roomCode: room.code, playerId: seat.playerId, token: seat.token }
   }
@@ -101,21 +116,23 @@ export class RoomService {
     const room = this.room(code)
     const seat = room.seats.find((item) => item.token === token)
     if (!seat) throw new RoomError('invalid_session', 'Session token is invalid for this room')
-    this.link(room, seat.playerId, connectionId, publish, close)
     this.touch(room)
+    this.save(room)
+    this.link(room, seat.playerId, connectionId, publish, close)
     this.broadcast(room)
     return { roomCode: room.code, playerId: seat.playerId, token: seat.token }
   }
   disconnect(connectionId: string): void {
     const client = this.connections.get(connectionId)
     if (!client) return
+    const room = this.store.get(client.roomCode) ? this.room(client.roomCode) : undefined
     this.connections.delete(connectionId)
-    const room = this.rooms.get(client.roomCode)
     if (!room) return
     const seat = room.seats.find((item) => item.playerId === client.playerId)
     if (seat?.connectionId === connectionId) {
       seat.connectionId = null
       this.touch(room)
+      this.save(room)
       this.broadcast(room)
     }
   }
@@ -127,10 +144,10 @@ export class RoomService {
     if (room.state && room.state.phase !== 'scored') {
       throw new RoomError('game_started', 'Disconnect to pause an active game; your seat is kept for reconnecting')
     }
-    this.connections.delete(connectionId)
     room.seats = room.seats.filter((seat) => seat.playerId !== playerId)
     if (!room.seats.length) {
-      this.rooms.delete(room.code)
+      this.store.delete(room.code)
+      this.connections.delete(connectionId)
       return
     }
     if (room.hostPlayerId === playerId) {
@@ -138,12 +155,13 @@ export class RoomService {
     }
     room.revision += 1
     this.touch(room)
+    this.save(room)
+    this.connections.delete(connectionId)
     this.broadcast(room)
   }
   async start(code: string, playerId: string, commandId: string, expectedRevision: number, connectionId?: string): Promise<number> {
     const room = this.room(code)
-    return this.serial(room, () => {
-      if (this.rooms.get(room.code) !== room) throw new RoomError('room_expired', 'Room expired before this command could be applied')
+    return this.serial(room.code, (room) => {
       if (connectionId && !this.isConnectionActive(room.code, playerId, connectionId)) throw new RoomError('connection_replaced', 'This seat connected from another browser; reconnect here to continue')
       const fingerprint = JSON.stringify({ type: 'start' })
       const duplicate = room.decisions.get(`${playerId}:${commandId}`)
@@ -159,14 +177,14 @@ export class RoomService {
       room.revision += 1
       this.remember(room, playerId, commandId, fingerprint)
       this.touch(room)
+      this.save(room)
       this.broadcast(room)
       return room.revision
     })
   }
   async submitDecision(code: string, playerId: string, commandId: string, expectedRevision: number, decision: ReplayDecision, connectionId?: string): Promise<number> {
     const room = this.room(code)
-    return this.serial(room, () => {
-      if (this.rooms.get(room.code) !== room) throw new RoomError('room_expired', 'Room expired before this command could be applied')
+    return this.serial(room.code, (room) => {
       if (connectionId && !this.isConnectionActive(room.code, playerId, connectionId)) throw new RoomError('connection_replaced', 'This seat connected from another browser; reconnect here to continue')
       const fingerprint = JSON.stringify(decision)
       const duplicate = room.decisions.get(`${playerId}:${commandId}`)
@@ -185,13 +203,19 @@ export class RoomService {
       room.revision += 1
       this.remember(room, playerId, commandId, fingerprint)
       this.touch(room)
+      this.save(room)
       this.broadcast(room)
       return room.revision
     })
   }
-  private serial<T>(room: Room, action: () => T): Promise<T> {
-    const task = room.mutex.then(action)
-    room.mutex = task.then(() => undefined, () => undefined)
+  private serial<T>(code: string, action: (room: Room) => T): Promise<T> {
+    const task = (this.queues.get(code) ?? Promise.resolve()).then(() => {
+      if (!this.store.get(code)) throw new RoomError('room_expired', 'Room expired before this command could be applied')
+      return action(this.room(code))
+    })
+    const settled = task.then(() => undefined, () => undefined)
+    this.queues.set(code, settled)
+    void settled.then(() => { if (this.queues.get(code) === settled) this.queues.delete(code) })
     return task
   }
   private checkCommand(room: Room, playerId: string, revision: number): void {
@@ -203,19 +227,22 @@ export class RoomService {
     if (room.decisions.size > 500) room.decisions.delete(room.decisions.keys().next().value!)
   }
   sweepExpired(now = this.now()): number {
-    let removed = 0
-    for (const [code, room] of this.rooms) if (now - room.lastActivity > (this.options.ttlMs ?? DEFAULT_ROOM_TTL_MS)) {
-      this.rooms.delete(code)
+    const expired = this.store.deleteExpired(now - (this.options.ttlMs ?? DEFAULT_ROOM_TTL_MS))
+    for (const code of expired) {
       for (const [id, client] of this.connections) if (client.roomCode === code) {
         client.publish({ type: 'error', code: 'room_expired', message: 'This room expired after two hours of inactivity' })
         client.close?.()
         this.connections.delete(id)
       }
-      removed += 1
     }
-    return removed
+    return expired.length
   }
-  roomCount(): number { return this.rooms.size }
+  roomCount(): number { return this.store.count() }
+  async close(): Promise<void> {
+    await Promise.all(this.queues.values())
+    this.connections.clear()
+    this.store.close()
+  }
   private validateName(name: string): void { if (typeof name !== 'string' || !name.trim() || name.trim().length > 40) throw new RoomError('invalid_name', 'Name must contain 1–40 characters') }
   private seed(): number { const value = this.options.randomSeed?.() ?? randomBytes(4).readUInt32BE(0); return value >>> 0 }
 }

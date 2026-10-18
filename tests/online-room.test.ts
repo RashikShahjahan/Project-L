@@ -3,8 +3,9 @@ import test from 'node:test'
 import { RoomError, RoomService } from '../server/room-service.js'
 import type { ReplayDecision } from '../src/game/replay.js'
 
-test('rooms create, join, enforce host and seat ownership, revisions, and retries', async () => {
-  const service = new RoomService({ randomSeed: () => 17 })
+test('rooms create, join, enforce host and seat ownership, revisions, and retries', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 17 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host-1')
   const guest = service.joinRoom(host.roomCode, 'Guest', 'guest-1')
   assert.equal(service.getSnapshot(host.roomCode, host.playerId).room.status, 'lobby')
@@ -25,8 +26,9 @@ test('rooms create, join, enforce host and seat ownership, revisions, and retrie
   await assert.rejects(service.submitDecision(host.roomCode, active.playerId, 'move-2', 2, decision), (error: unknown) => error instanceof RoomError && error.code === 'stale_revision')
 })
 
-test('lobby capacity, connected start, and start retries keep one game', async () => {
-  const service = new RoomService({ randomSeed: () => 18 })
+test('lobby capacity, connected start, and start retries keep one game', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 18 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host')
   await assert.rejects(service.start(host.roomCode, host.playerId, 'start-alone', 0), (error: unknown) => error instanceof RoomError && error.code === 'not_enough_players')
   const second = service.joinRoom(host.roomCode, 'Second')
@@ -44,8 +46,9 @@ test('lobby capacity, connected start, and start retries keep one game', async (
   assert.equal(service.getSnapshot(host.roomCode, fourth.playerId).room.status, 'playing')
 })
 
-test('invalid decisions are atomic and simultaneous same-revision commands serialize', async () => {
-  const service = new RoomService({ randomSeed: () => 19 })
+test('invalid decisions are atomic and simultaneous same-revision commands serialize', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 19 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host')
   const guest = service.joinRoom(host.roomCode, 'Guest', 'guest')
   await service.start(host.roomCode, host.playerId, 'start', 1)
@@ -66,8 +69,9 @@ test('invalid decisions are atomic and simultaneous same-revision commands seria
   assert.equal(service.getSnapshot(host.roomCode, host.playerId).revision, before.revision + 1)
 })
 
-test('identical command IDs are scoped to a seat', async () => {
-  const service = new RoomService({ randomSeed: () => 20 })
+test('identical command IDs are scoped to a seat', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 20 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host')
   const guest = service.joinRoom(host.roomCode, 'Guest', 'guest')
   await service.start(host.roomCode, host.playerId, 'start', 1)
@@ -88,10 +92,11 @@ test('identical command IDs are scoped to a seat', async () => {
   assert.equal(next, snapshot.revision + 1)
 })
 
-test('reconnect replaces a seat connection, preserves its session, and expiration removes rooms', () => {
+test('reconnect replaces a seat connection, preserves its session, and expiration removes rooms', (t) => {
   let now = 10
   const events: string[] = []
-  const service = new RoomService({ ttlMs: 100, now: () => now })
+  const service = new RoomService({ databasePath: ':memory:', ttlMs: 100, now: () => now })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'old-connection', () => events.push('old'))
   service.disconnect('old-connection')
   assert.equal(service.getSnapshot(host.roomCode, host.playerId).room.seats[0].connected, false)
@@ -107,8 +112,9 @@ test('reconnect replaces a seat connection, preserves its session, and expiratio
   assert.throws(() => service.getSnapshot(host.roomCode, host.playerId), (error: unknown) => error instanceof RoomError && error.code === 'room_missing')
 })
 
-test('wire player views omit hidden completed puzzles and secret setup state', async () => {
-  const service = new RoomService({ randomSeed: () => 23 })
+test('wire player views omit hidden completed puzzles and secret setup state', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 23 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'a')
   const guest = service.joinRoom(host.roomCode, 'Guest', 'b')
   await service.start(host.roomCode, host.playerId, 'start', 1)
@@ -122,8 +128,9 @@ test('wire player views omit hidden completed puzzles and secret setup state', a
   assert.ok('completed' in view.players.find((player) => player.id === guest.playerId)!)
 })
 
-test('a complete room game reaches final scores through serialized room decisions', async () => {
-  const service = new RoomService({ randomSeed: () => 29 })
+test('a complete room game reaches final scores through serialized room decisions', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 29 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'a')
   const guest = service.joinRoom(host.roomCode, 'Guest', 'b')
   await service.start(host.roomCode, host.playerId, 'start', 1)
@@ -158,8 +165,9 @@ test('a complete room game reaches final scores through serialized room decision
   assert.fail('Game did not finish within the decision limit')
 })
 
-test('presence updates preserve the game revision and an unapplied command survives reconnect', async () => {
-  const service = new RoomService({ randomSeed: () => 17 })
+test('presence updates preserve the game revision and an unapplied command survives reconnect', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:', randomSeed: () => 17 })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host', () => {})
   const guest = service.joinRoom(host.roomCode, 'Guest', 'guest', () => {})
   const lobby = service.getSnapshot(host.roomCode, host.playerId)
@@ -180,8 +188,9 @@ test('presence updates preserve the game revision and an unapplied command survi
   assert.equal(service.getSnapshot(host.roomCode, active.playerId).revision, before.revision + 1)
 })
 
-test('leaving releases lobby seats, transfers hosting, and removes empty rooms', async () => {
-  const service = new RoomService()
+test('leaving releases lobby seats, transfers hosting, and removes empty rooms', async (t) => {
+  const service = new RoomService({ databasePath: ':memory:' })
+  t.after(() => service.close())
   const host = service.createRoom('Host', 'host', () => {})
   const guest = service.joinRoom(host.roomCode, 'Guest', 'guest', () => {})
   assert.throws(() => service.leaveRoom(host.roomCode, host.playerId, 'wrong-connection'), /no longer owns/)

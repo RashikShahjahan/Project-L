@@ -8,6 +8,7 @@ Implemented:
 - Take, place, upgrade/exchange, recycle, Master, completion order/rewards, Finishing Touches and scoring.
 - Mouse, touch and keyboard placement; staging, undo, previews and reduced motion.
 - Authoritative online rooms, private player views, command deduplication, reconnect and pending-command recovery.
+- SQLite room persistence across restarts, including sessions, hidden game state, revisions and command retry receipts.
 - Lobby leave with seat release and host transfer. Active-game seats remain recoverable after disconnecting or reloading.
 - Online staging and completion controls, isolated observations and typed rules fixtures.
 
