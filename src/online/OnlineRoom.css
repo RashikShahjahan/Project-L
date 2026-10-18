@@ -12,7 +12,6 @@
 .online-entry label{display:grid;gap:8px;font-size:14px;margin:16px 0}
 .online-entry input{min-height:44px;padding:9px;border:1px solid #8b978e;border-radius:5px;background:#fff;color:#202722;font:inherit;font-size:14px}
 .online-primary{background:#345b40!important;color:white!important}
-.online-divider{text-align:center;color:#4d5a52;margin:20px}
 .online-share{display:flex;gap:8px;align-items:center}
 .online-share code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;padding:10px;background:#edf0ed;border-radius:4px}
 .online-seats{display:grid;gap:8px;margin:20px 0}

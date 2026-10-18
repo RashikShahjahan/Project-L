@@ -13,6 +13,7 @@ export function OnlineRoom() {
   const room = useOnlineRoom()
   const [name, setName] = useState('')
   const [roomCode, setRoomCode] = useState(() => new URLSearchParams(location.search).get('room')?.toUpperCase() ?? '')
+  const [entryMode, setEntryMode] = useState<'create' | 'join' | null>(() => roomCode ? 'join' : null)
   const { snapshot, status, session, pending, error, message, send, start, leave } = room
   const connected = status === 'connected'
   const canEnter = connected && !session
@@ -51,13 +52,22 @@ export function OnlineRoom() {
       <button disabled={!connected || !!pending} onClick={leave}>Leave room</button>
     </section> : <section className="online-entry">
       <p className="online-kicker">2–4 PLAYERS · PRIVATE ROOM</p>
-      <h2>Play Project L online</h2>
-      <label>Your name<input value={name} maxLength={40} onChange={(event) => setName(event.target.value)} /></label>
-      <button className="online-primary" disabled={!name.trim() || !canEnter} onClick={() => send({ type: 'create', name: name.trim() })}>Create a room</button>
-      <div className="online-divider">or join a room</div>
-      <label>Room code<input value={roomCode} maxLength={8} autoCapitalize="characters" onChange={(event) => setRoomCode(event.target.value.toUpperCase())} /></label>
-      <button disabled={!name.trim() || !roomCode.trim() || !canEnter} onClick={() => send({ type: 'join', name: name.trim(), roomCode: roomCode.trim() })}>Join room</button>
-      {session && <p role="status">Reconnecting to {session.roomCode}…</p>}
+      <h2>{session ? 'Reconnecting to your room' : entryMode === 'join' ? 'Join a room' : entryMode === 'create' ? 'Create a room' : 'Play Project L online'}</h2>
+      {session ? <p role="status">Reconnecting to {session.roomCode}…</p> : entryMode ? <form onSubmit={(event) => {
+        event.preventDefault()
+        if (!name.trim() || !canEnter || entryMode === 'join' && !roomCode.trim()) return
+        send(entryMode === 'create' ? { type: 'create', name: name.trim() } : { type: 'join', name: name.trim(), roomCode: roomCode.trim() })
+      }}>
+        <label>Your name<input value={name} maxLength={40} onChange={(event) => setName(event.target.value)} /></label>
+        {entryMode === 'join' && <label>Room code<input value={roomCode} maxLength={8} autoCapitalize="characters" onChange={(event) => setRoomCode(event.target.value.toUpperCase())} /></label>}
+        <div className="online-action-row">
+          <button type="submit" className="online-primary" disabled={!name.trim() || !canEnter || entryMode === 'join' && !roomCode.trim()}>{entryMode === 'join' ? 'Join room' : 'Create a room'}</button>
+          <button type="button" onClick={() => { setEntryMode(null); room.setError(''); room.setMessage('') }}>Back</button>
+        </div>
+      </form> : <div className="online-action-row">
+        <button className="online-primary" onClick={() => setEntryMode('create')}>Create a room</button>
+        <button onClick={() => setEntryMode('join')}>Join a room</button>
+      </div>}
     </section>}
     {(error || message || status === 'replaced') && <p className={error ? 'online-error' : 'online-status'} role="status">
       {error || message || 'This seat connected in another tab. Use that connection to continue.'}
