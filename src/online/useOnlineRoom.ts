@@ -6,6 +6,8 @@ import { OnlineClient } from './client.js'
 import type { ClientMessage, RoomSnapshot, ServerMessage } from './protocol.js'
 import { savePending, savedPending, saveSession, savedSession } from './session.js'
 import type { PendingCommand, RoomCommand } from './session.js'
+import { tutorialEventForDecision } from '../components/tutorial.js'
+import type { ConfirmedTutorialEvent } from '../components/tutorial.js'
 
 export type LinkStatus = 'connecting' | 'connected' | 'disconnected' | 'replaced'
 
@@ -32,6 +34,8 @@ export function useOnlineRoom() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [connectionKey, setConnectionKey] = useState(0)
+  const [tutorialEvents, setTutorialEvents] = useState<readonly ConfirmedTutorialEvent[]>([])
+  const tutorialCommandId = useRef<string | null>(null)
   const authenticated = authenticatedConnection === connectionKey
   const clientRef = useRef<OnlineClient | null>(null)
   const snapshotRef = useRef(snapshot)
@@ -52,6 +56,8 @@ export function useOnlineRoom() {
     setSnapshot(null)
     setAuthenticatedConnection(null)
     setBatch([])
+    setTutorialEvents([])
+    tutorialCommandId.current = null
     setMessage('')
     clearPending()
     setRoomLink(null)
@@ -59,6 +65,8 @@ export function useOnlineRoom() {
 
   const handleMessage = useCallback((msg: ServerMessage) => {
     if (msg.type === 'created' || msg.type === 'joined' || msg.type === 'reconnected') {
+      // Retried commands after reconnect must not advance onboarding.
+      tutorialCommandId.current = null
       const next = { roomCode: msg.roomCode, playerId: msg.playerId, token: msg.token }
       sessionRef.current = next
       setSession(next)
@@ -84,6 +92,11 @@ export function useOnlineRoom() {
     if (msg.type === 'ack') {
       const waiting = pendingRef.current?.message
       if (waiting?.commandId !== msg.commandId) return
+      if (waiting.type === 'decision' && tutorialCommandId.current === msg.commandId) {
+        const event = tutorialEventForDecision(waiting.decision)
+        if (event) setTutorialEvents((events) => [...events.slice(-3), { id: (events.at(-1)?.id ?? 0) + 1, event }])
+      }
+      tutorialCommandId.current = null
       clearPending()
       setBatch([])
       if (waiting.type === 'decision' && waiting.decision.type === 'completion-reward') {
@@ -98,7 +111,7 @@ export function useOnlineRoom() {
       return
     }
     if (msg.type === 'error') {
-      if (msg.commandId === pendingRef.current?.message.commandId) clearPending()
+      if (msg.commandId === pendingRef.current?.message.commandId) { tutorialCommandId.current = null; clearPending() }
       if (['room_missing', 'room_expired', 'invalid_session'].includes(msg.code)) {
         forgetRoom()
         if (msg.code === 'room_expired') setConnectionKey((key) => key + 1)
@@ -139,6 +152,7 @@ export function useOnlineRoom() {
     if (status !== 'connected' || !authenticated || pendingRef.current || !session) return
     const next = { roomCode: session.roomCode, playerId: session.playerId, message: command }
     pendingRef.current = next
+    tutorialCommandId.current = command.commandId
     setPending(next)
     savePending(next)
     setError('')
@@ -161,5 +175,5 @@ export function useOnlineRoom() {
   const mayAct = status === 'connected' && authenticated && !pending
     && snapshot?.room.status === 'playing' && view?.activePlayerId === view?.viewerId
 
-  return { status, snapshot, session, pending, batch, setBatch, error, setError, message, setMessage, mayAct, send, submit, start, leave }
+  return { status, snapshot, session, pending, batch, setBatch, error, setError, message, setMessage, mayAct, send, submit, start, leave, tutorialEvents }
 }

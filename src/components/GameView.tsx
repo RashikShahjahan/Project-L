@@ -9,12 +9,17 @@ import { PIECE_LABELS } from '../game/piece-labels.js'
 import type { Placement, PlayerId, PlayerState, UnfinishedPuzzle } from '../game/state.js'
 import type { PlayerView } from '../online/protocol.js'
 import { GameGuide } from './GameGuide.js'
+import { advanceTutorialStep, dismissTutorial, shouldOpenTutorial } from './tutorial.js'
+import type { ConfirmedTutorialEvent } from './tutorial.js'
 import type { RecycleInteraction, ReserveInteraction, TableTools } from './useTableActions.js'
 import './TableActions.css'
 import './Tabletop.css'
 
 export interface GameViewProps {
   state: PlayerView
+  gameId: string
+  turnStatus: string
+  tutorialEvents: readonly ConfirmedTutorialEvent[]
   onAction: (action: GameAction) => void
   canAct?: boolean
   viewerCanAct?: boolean
@@ -276,7 +281,7 @@ function PlayerBoard({ player, active, selectedId, onSelect, onAction, canAct, v
   </section>
 }
 
-export function GameView({ state, onAction, canAct = true, viewerCanAct, canTake = canAct, onPiecePickup, onPlacementError, masterMode = false, stagedPuzzleIds = [], menu, children, trayExchange, reserveInteraction, recycle, tableTools }: GameViewProps) {
+export function GameView({ state, gameId, turnStatus, tutorialEvents, onAction, canAct = true, viewerCanAct, canTake = canAct, onPiecePickup, onPlacementError, masterMode = false, stagedPuzzleIds = [], menu, children, trayExchange, reserveInteraction, recycle, tableTools }: GameViewProps) {
   const viewerPlayerId = state.viewerId
   const phase = state.phase
   const players: readonly BoardPlayer[] = state.players.map((player) => ({ ...player, supply: player.id === state.viewerId ? state.ownSupply : player.supply }))
@@ -308,7 +313,20 @@ export function GameView({ state, onAction, canAct = true, viewerCanAct, canTake
   ].filter(Boolean).join(' ')
   const marketHelp = marketStatus || 'Take any face-up card. Fill it to earn points and the reward piece.'
   const results = state.results
-  const [helpOpen, setHelpOpen] = useState(false)
+  // Rejoining an underway table never interrupts play. Each room supports one
+  // game; the room code and stable seat identify that player's dismissal.
+  const [helpOpen, setHelpOpen] = useState(() => shouldOpenTutorial(gameId, state.viewerId,
+    state.phase === 'turns' && state.round === 1 && state.actionsRemaining === 3
+    && state.players.every((player) => !player.unfinished.length && !player.completed?.length
+      && PIECE_IDS.every((piece) => player.supply[piece] === (piece === 'single' || piece === 'domino' ? 1 : 0)))))
+  const [tutorialStep, setTutorialStep] = useState(0)
+  const [guideCollapsed, setGuideCollapsed] = useState(false)
+  const lastTutorialEvent = useRef(tutorialEvents.at(-1)?.id ?? 0)
+  useEffect(() => {
+    const events = tutorialEvents.filter((event) => event.id > lastTutorialEvent.current)
+    lastTutorialEvent.current = tutorialEvents.at(-1)?.id ?? 0
+    if (helpOpen && events.length) setTutorialStep((step) => events.reduce((next, event) => advanceTutorialStep(next, event.event), step))
+  }, [tutorialEvents, helpOpen])
   const [localSelection, setLocalSelection] = useState<PuzzleId | null>(null)
   const [marketViewOverride, setMarketViewOverride] = useState<{ playerId: PlayerId; expanded: boolean } | null>(null)
   const marketExpanded = recycle || reserveInteraction ? true : activePlayer
@@ -377,11 +395,18 @@ export function GameView({ state, onAction, canAct = true, viewerCanAct, canTake
     }
   }, [activeId, activePlayer?.completed, visibleScores, viewerPlayerId])
 
-  return <main className={`gv-shell ${heldPuzzle ? 'is-moving-puzzle' : ''}`}>
+  const showTutorialTarget = () => {
+    setGuideCollapsed(false)
+    const selectors = ['.gv-action-tokens', '.gv-market', '.gv-player.is-active .gv-stage-center', '.gv-player.is-active .gv-stage-center', '.gv-reserve', '.gv-refresh-row, .gv-recycle-row-controls', '.gv-player.is-active .gv-master-token', '.gv-deck-stack.black']
+    if ([1, 4, 5, 7].includes(tutorialStep) && activePlayer) setMarketViewOverride({ playerId: activePlayer.id, expanded: true })
+    requestAnimationFrame(() => document.querySelector(selectors[tutorialStep])?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }))
+  }
+
+  return <main className={`gv-shell ${heldPuzzle ? 'is-moving-puzzle' : ''}`} data-tutorial-step={helpOpen && !guideCollapsed ? tutorialStep : undefined}>
     {heldPuzzle && <div className={`gv-held-puzzle gv-market-card ${getPuzzle(heldPuzzle.id).deck}`} style={{left: heldPuzzle.x, top: heldPuzzle.y}}><PuzzleSvg puzzleId={heldPuzzle.id} /></div>}
-    <header className="gv-hud"><div className="gv-brand"><span>PROJECT</span><b>L</b></div><span className="gv-hud-round">{phase === 'turns' ? `ROUND ${String(round ?? 0).padStart(2,'0')}` : phase === 'finishing-touches' ? 'FINISHING TOUCHES' : 'GAME COMPLETE'}</span><div className="gv-opponents" aria-label="Other players">{players.filter(player => player.id !== state.viewerId).map(player => <div className="gv-seat" key={player.id}><PlayerBoard player={player} active={false} selectedId={null} onSelect={choose} onAction={onAction} canAct={false} visibleScores={visibleScores} viewerPlayerId={viewerPlayerId} finalScore={results?.find((result) => result.playerId === player.id)?.total} /></div>)}</div><div className="gv-hud-menu"><button type="button" className="guide-toggle" aria-expanded={helpOpen} aria-controls="game-rules" onClick={() => setHelpOpen(!helpOpen)}>How to play</button>{menu}</div></header>
+    <header className="gv-hud"><div className="gv-brand"><span>PROJECT</span><b>L</b></div><span className="gv-hud-round">{phase === 'turns' ? `ROUND ${String(round ?? 0).padStart(2,'0')}` : phase === 'finishing-touches' ? 'FINISHING TOUCHES' : 'GAME COMPLETE'}</span><div className="gv-opponents" aria-label="Other players">{players.filter(player => player.id !== state.viewerId).map(player => <div className="gv-seat" key={player.id}><PlayerBoard player={player} active={false} selectedId={null} onSelect={choose} onAction={onAction} canAct={false} visibleScores={visibleScores} viewerPlayerId={viewerPlayerId} finalScore={results?.find((result) => result.playerId === player.id)?.total} /></div>)}</div><div className="gv-hud-menu"><button type="button" className="guide-toggle" aria-expanded={helpOpen} aria-controls="game-rules" onClick={() => { if (!helpOpen) { setTutorialStep(0); setGuideCollapsed(false) } else dismissTutorial(gameId, state.viewerId); setHelpOpen(!helpOpen) }}>How to play</button>{menu}</div></header>
     <div className="gv-layout">
-      <GameGuide suspended={Boolean(trayExchange || recycle || masterMode)} open={helpOpen} onClose={() => setHelpOpen(false)} hasPuzzle={Boolean(activePlayer?.unfinished.length || activePlayer?.completed?.length)} hasPlacement={Boolean(activePlayer?.unfinished.some((p) => p.placements.length) || activePlayer?.completed?.length)} />
+      <GameGuide open={helpOpen} step={tutorialStep} onStep={setTutorialStep} onClose={() => setHelpOpen(false)} onShowTarget={showTutorialTarget} gameId={gameId} playerId={state.viewerId} turnStatus={turnStatus} canAct={viewerCanAct ?? canAct} canPlace={canAct} canTake={canTake} collapsed={guideCollapsed} onCollapse={() => setGuideCollapsed(!guideCollapsed)} hasPuzzle={Boolean(activePlayer?.unfinished.length)} phase={phase} />
       {activePlayer && <button className="gv-mobile-market-toggle" type="button" aria-expanded={marketExpanded} aria-controls="gv-shared-table" onClick={() => setMarketViewOverride({ playerId: activePlayer.id, expanded: !marketExpanded })}><span>Market &amp; supply <small>· 1 action</small></span><span aria-hidden="true">{marketExpanded ? '−' : '+'}</span></button>}
       <div id="gv-shared-table" className={`gv-shared-table ${marketExpanded ? '' : 'is-market-collapsed'}`}>
       <section className="gv-market" aria-label="Shared puzzle market">

@@ -132,10 +132,13 @@ function OnlineGame({ snapshot, view, room }: {
     : pending ? 'Move sent. Waiting for the server…'
     : mayAct ? 'Your turn.'
     : activeConnected ? `${activeName} is playing.` : `Waiting for ${activeName} to reconnect.`
+  const tutorialTurnCue = view.phase === 'turns' && status === 'connected' && !pending
+    ? `${turnCue} ${view.actionsRemaining} ${view.actionsRemaining === 1 ? 'action' : 'actions'} left this turn.`
+    : turnCue
 
   return <div className="online-game-shell">
     <div className="online-game-status"><b>{snapshot.roomCode}</b><span>{status === 'connected' ? 'Connected' : status === 'replaced' ? 'Seat replaced' : 'Reconnecting…'}</span>{pending && <span>Move pending</span>}</div>
-    <GameView state={localView} onAction={handleAction} onPlacementError={setError} viewerCanAct={mayAct} canAct={controls.canPlace || mayAct && view.phase === 'finishing-touches'} canTake={controls.canTake} tableTools={controls.tableTools} trayExchange={controls.trayExchange} reserveInteraction={controls.reserveInteraction} recycle={controls.recycle} masterMode={controls.master} stagedPuzzleIds={controls.master ? batch.map((item) => item.puzzleId) : []} menu={<span>{own.name}</span>}>
+    <GameView state={localView} gameId={snapshot.roomCode} turnStatus={tutorialTurnCue} tutorialEvents={room.tutorialEvents} onAction={handleAction} onPlacementError={setError} viewerCanAct={mayAct} canAct={controls.canPlace || mayAct && view.phase === 'finishing-touches'} canTake={controls.canTake} tableTools={controls.tableTools} trayExchange={controls.trayExchange} reserveInteraction={controls.reserveInteraction} recycle={controls.recycle} masterMode={controls.master} stagedPuzzleIds={controls.master ? batch.map((item) => item.puzzleId) : []} menu={<span>{own.name}</span>}>
       <section className="online-controls control-panel" aria-label="Online turn controls">
         <p className="online-turn-cue" aria-live="polite">{turnCue}</p>
         {(error || message) && <p className={error ? 'online-error' : 'online-status'} role={error ? 'alert' : 'status'}>{error || message}</p>}

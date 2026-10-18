@@ -32,13 +32,6 @@
 .gv-hud-menu .guide-toggle { color: var(--sub); text-decoration: none; font-size: 11px; }
 .game-menu > summary { font-size: 11px; }
 .gv-layout { width: min(100% - 64px, 1380px); margin: auto; padding: 12px 0 28px; display: grid; grid-template-columns: minmax(0,1fr) 190px; align-items: start; gap: 16px 32px; }
-.game-guide { grid-column: 1 / -1; margin: 0; }
-.game-guide.is-hidden { display: none; }
-.guide-nudge { padding: 0; display: flex; align-items: center; justify-content: center; gap: 16px; border: 0; background: none; color: var(--sub); line-height: 1.5; font-size: 12px; }
-.guide-nudge strong { color: var(--ink); font-weight: 550; }
-.guide-nudge button { min-height: 32px; padding: 4px; border: 0; border-bottom: 1px solid #85867355; border-radius: 0; font-size: 11px; background: transparent; }
-.guide-rules { max-width: 760px; margin: 0 auto 12px; padding: 24px; border: 1px solid #bcb6a6; border-radius: 2px; background: var(--card); color: var(--card-ink); box-shadow: 0 8px 28px var(--shadow); font-size: 13px; }
-.guide-video { display: inline-block; margin: 10px 18px 0 0; color: #7c642e; }
 .gv-shared-table { display: contents; }
 .gv-market { grid-column: 1; display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 8px 24px; padding: 0 0 16px; border: 0; border-bottom: 1px solid light-dark(#777a641f,#ccd3b51f); background: none; }
 .gv-market-title { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
