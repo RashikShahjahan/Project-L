@@ -1,0 +1,14 @@
+.feedback-box { width: 100%; max-width: 520px; margin: 24px auto; padding: 20px; border: 1px solid #d3dad4; border-radius: 8px; color: #202722; background: #fff; }
+.feedback-box h2 { margin: 0 0 8px; font-size: 18px; }
+.feedback-box p { font-size: 13px; line-height: 1.5; color: #4d5a52; }
+.feedback-box form { display: grid; gap: 8px; margin-top: 16px; }
+.feedback-box label { font-size: 14px; font-weight: 600; }
+.feedback-box textarea { width: 100%; min-height: 88px; resize: vertical; padding: 10px; border: 1px solid #8b978e; border-radius: 5px; color: #202722; background: #fff; font: inherit; font-size: 14px; line-height: 1.5; }
+.feedback-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.feedback-box button { min-height: 44px; padding: 8px 12px; border: 1px solid #345b40; border-radius: 5px; color: #fff; background: #345b40; font: inherit; font-size: 13px; cursor: pointer; }
+.feedback-box button:disabled { opacity: .5; cursor: not-allowed; }
+.feedback-count { color: #4d5a52; font-size: 12px; }
+.feedback-box .feedback-status { min-height: 1.5em; color: #345b40; }
+.feedback-box .feedback-error { color: #a02a24; }
+.online-game-shell > .feedback-box { width: calc(100% - 32px); }
+@media (max-width: 700px) { .feedback-box { padding: 16px; } }

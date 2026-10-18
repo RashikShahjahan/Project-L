@@ -32,6 +32,7 @@ export class RoomService {
     this.sweepExpired()
   }
   private now(): number { return (this.options.now ?? Date.now)() }
+  saveFeedback(message: string): void { this.store.saveFeedback(message, this.now()) }
   private room(code: string): Room {
     const stored = this.store.get(code.toUpperCase())
     if (!stored) throw new RoomError('room_missing', 'Room was not found or has expired')

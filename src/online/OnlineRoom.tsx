@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { GameView } from '../components/GameView.js'
+import { FeedbackBox } from '../components/FeedbackBox.js'
 import { CompletionOrder, CompletionRewards, FinishingTouchesControls } from '../components/CompletionControls.js'
 import { useTableActions } from '../components/useTableActions.js'
 import { automaticCompletionDecision } from '../game/automatic-completions.js'
@@ -72,6 +73,7 @@ export function OnlineRoom() {
     {(error || message || status === 'replaced') && <p className={error ? 'online-error' : 'online-status'} role="status">
       {error || message || 'This seat connected in another tab. Use that connection to continue.'}
     </p>}
+    <FeedbackBox />
   </main>
 }
 
@@ -153,5 +155,6 @@ function OnlineGame({ snapshot, view, room }: {
         {view.phase === 'scored' && <div className="online-action-row"><button disabled={status !== 'connected'} onClick={room.leave}>Leave room</button></div>}
       </section>
     </GameView>
+    <FeedbackBox />
   </div>
 }

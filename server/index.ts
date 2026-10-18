@@ -6,6 +6,7 @@ import { WebSocket, WebSocketServer } from 'ws'
 import { RoomError, RoomService } from './room-service.js'
 import { parseClientMessage } from '../src/online/protocol.js'
 import type { ServerMessage } from '../src/online/protocol.js'
+import { handleFeedback } from './feedback.js'
 
 const mime: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' }
 export interface RunningServer { readonly server: ReturnType<typeof createHttpServer>; readonly rooms: RoomService; readonly port: number; close(): Promise<void> }
@@ -13,6 +14,13 @@ export async function startServer(options: { port?: number; host?: string; stati
   const rooms = options.roomService ?? new RoomService({ databasePath: options.databasePath })
   const staticDir = options.staticDir ?? resolve(process.cwd(), 'dist')
   const server = createHttpServer((req, res) => {
+    if (req.url?.split('?')[0] === '/api/feedback') {
+      if (options.frontendOrigin && req.headers.origin && req.headers.origin !== options.frontendOrigin) {
+        res.writeHead(403); res.end('Forbidden'); return
+      }
+      void handleFeedback(req, res, (message) => rooms.saveFeedback(message))
+      return
+    }
     if (req.url === '/health' || req.url === '/healthz') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ status: 'ok', rooms: rooms.roomCount() })); return }
     if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end('Method not allowed'); return }
     const requested = (req.url ?? '/').split('?')[0] || '/'

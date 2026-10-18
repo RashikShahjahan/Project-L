@@ -1,0 +1,1 @@
+export const MAX_FEEDBACK_LENGTH = 5000

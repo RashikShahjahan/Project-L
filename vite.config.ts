@@ -4,5 +4,5 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: { proxy: { '/ws': { target: 'ws://localhost:8787', ws: true } } },
+  server: { proxy: { '/ws': { target: 'ws://localhost:8787', ws: true }, '/api': { target: 'http://localhost:8787' } } },
 })

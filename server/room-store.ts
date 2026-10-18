@@ -31,6 +31,11 @@ export class RoomStore {
           data TEXT NOT NULL CHECK (json_valid(data))
         ) STRICT;
         CREATE INDEX IF NOT EXISTS rooms_last_activity ON rooms(last_activity);
+        CREATE TABLE IF NOT EXISTS feedback (
+          id INTEGER PRIMARY KEY,
+          message TEXT NOT NULL CHECK (length(trim(message)) BETWEEN 1 AND 5000),
+          created_at INTEGER NOT NULL
+        ) STRICT;
       `)
     } catch (error) {
       this.db.close()
@@ -57,5 +62,8 @@ export class RoomStore {
   }
 
   count(): number { return this.db.prepare('SELECT COUNT(*) AS count FROM rooms').get()!.count as number }
+  saveFeedback(message: string, createdAt: number): void {
+    this.db.prepare('INSERT INTO feedback (message, created_at) VALUES (?, ?)').run(message, createdAt)
+  }
   close(): void { if (this.db.isOpen) this.db.close() }
 }

@@ -33,6 +33,8 @@ The build runs TypeScript checks and writes the production app to `dist/`. Previ
 
 ## Online multiplayer
 
+The lobby and game include an anonymous feedback textbox. Submissions are saved through `POST /api/feedback` to the `feedback` table in the same SQLite database, with only an ID, message, and creation timestamp; no player, room, session, or IP information is attached. Feedback remains after room expiry. Messages must contain 1–5,000 characters. To review feedback locally, query `SELECT id, message, created_at FROM feedback ORDER BY id DESC;` in the database.
+
 The server owns the game and saves rooms, player sessions, game state, and command retry history to `data/project-l.sqlite`. Set `DATABASE_PATH` to choose another location. Rooms survive server restarts and expire after two hours of inactivity; see [docs/project-l/online.md](docs/project-l/online.md) for local multi-browser setup and single-instance HTTPS/WSS deployment.
 
 ## Project layout
