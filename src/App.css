@@ -1,0 +1,44 @@
+/* Turn controls live in the dock and stay visually close to the pieces. */
+.control-panel { min-width: 0; color: var(--ink); }
+.action-feedback { min-height: 1.2em; color: var(--sub); font-size: .8125rem; line-height: 1.35; }
+.control-section { min-width: 0; padding: .65rem; border: 1px solid color-mix(in srgb, var(--sub), transparent 65%); border-radius: 5px; background: color-mix(in srgb, var(--tray), var(--ink) 3%); }
+.control-section p { margin: 0 0 .5rem; color: var(--sub); font-size: .8125rem; line-height: 1.4; }
+.action-feedback[role='alert'] { color: #b43d34; }
+.control-section h3 { margin: 0 0 .3rem; font-size: .78rem; }
+.button-row { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; }
+.button-row span { color: var(--sub); font-size: .8125rem; }
+.order-list { display: grid; gap: .4rem; margin: .65rem 0; }
+.order-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .45rem; }
+.puzzle-order-card { min-width: 0; min-height: 74px; padding: .55rem .7rem; display: flex; align-items: center; gap: .85rem; border: 1px solid #292d25; border-radius: 6px; box-shadow: 0 2px 4px #0002; }
+.puzzle-card-white { color: #20231f; background: #fffdf5; }
+.puzzle-card-black { color: #f6f2e7; background: #282b28; border-color: #111; }
+.puzzle-order-shape { flex: 0 0 46px; width: 46px; height: 46px; fill: currentColor; }
+.puzzle-order-meta { min-width: 0; display: flex; flex-direction: column; gap: .2rem; font-size: .95rem; line-height: 1.2; }
+.puzzle-order-meta small { font-size: .85rem; opacity: .8; }
+.order-arrows { display: flex; flex-direction: column; gap: .2rem; }
+.control-panel .order-arrows button { min-width: 42px; min-height: 38px; padding: .1rem; font-size: 1.1rem; }
+.control-panel button { min-height: 44px; padding: .4rem .65rem; border: 1px solid color-mix(in srgb, var(--sub), transparent 40%); border-radius: 4px; color: var(--ink); background: transparent; font-size: .8125rem; font-weight: 700; cursor: pointer; }
+.control-panel button:hover:not(:disabled) { background: light-dark(#ffffff66, #ffffff16); }
+.control-panel button:disabled { opacity: .42; cursor: not-allowed; }
+.control-panel .primary-button { border-color: var(--amber); color: var(--ink); background: color-mix(in srgb, var(--amber), transparent 82%); }
+.piece-choices { display: flex; flex-wrap: wrap; gap: .35rem; }
+.piece-choice { min-width: 64px; min-height: 64px; padding: .4rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; border: 1px solid transparent; border-radius: 5px; color: var(--ink); background: transparent; cursor: pointer; }
+.piece-choice:hover { border-color: color-mix(in srgb, var(--sub), transparent 45%); background: light-dark(#ffffff66, #ffffff16); }
+.piece-glyph { fill: currentColor; }
+.piece-choice .piece-glyph { width: 30px; height: 30px; color: var(--piece-domino); }
+.piece-choice .piece-glyph.piece-single { color: var(--piece-single); }
+.piece-choice .piece-glyph.piece-domino { color: var(--piece-domino); }
+.piece-choice .piece-glyph.piece-tri-line { color: var(--piece-tri-line); }
+.piece-choice .piece-glyph.piece-tri-corner { color: var(--piece-tri-corner); }
+.piece-choice .piece-glyph.piece-tet-t { color: var(--piece-tet-t); }
+.piece-choice .piece-glyph.piece-tet-line { color: var(--piece-tet-line); }
+.piece-choice .piece-glyph.piece-tet-l { color: var(--piece-tet-l); }
+.piece-choice .piece-glyph.piece-tet-zigzag { color: var(--piece-tet-zigzag); }
+.piece-choice .piece-glyph.piece-tet-square { color: var(--piece-tet-square); }
+.piece-choice span { max-width: 100%; color: var(--sub); font-size: .8125rem; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.gv-results { width: min(100% - 3rem, 1200px); margin: 1rem auto; }
+
+@media (max-width: 700px) {
+  .gv-results { width: min(100% - 1rem, 640px); }
+  .control-section { padding: .5rem; }
+}

@@ -1,0 +1,55 @@
+/* Actions use the table's existing pieces and cards. */
+.gv-hud-menu .guide-toggle { min-height: 44px; white-space: nowrap; }
+.guide-toggle { padding: .25rem 0; min-height: 32px; border: 0; color: var(--sub); background: transparent; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.guide-nudge span { flex: 1; }
+.guide-nudge strong { margin-right: .3rem; }
+.guide-nudge button, .guide-rules button, .market-recycle-cue button, .gv-recycle-row-controls button, .gv-recycle-arrows button, .reserve-exchange-cue button { min-height: 40px; padding: .35rem .65rem; border: 1px solid color-mix(in srgb, var(--sub), transparent 50%); border-radius: 5px; color: var(--ink); background: var(--table); cursor: pointer; }
+.guide-rules { line-height: 1.5; }
+.guide-rules > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.guide-rules ol { padding-left: 1.25rem; }
+.guide-rules li + li, .guide-rules p + p { margin-top: .4rem; }
+.guide-rules > button { margin-top: .75rem; }
+.control-panel .action-feedback { overflow-wrap: anywhere; }
+.table-action-strip { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; font-size: .8125rem; line-height: 1.4; }
+.table-action-strip > span { flex: 1 1 150px; color: var(--sub); }
+.table-action-strip strong { color: var(--ink); }
+.table-action-strip small { display: block; margin-top: .2rem; }
+.gv-reserve.is-choosing { scroll-margin-top: 75px; }
+.reserve-exchange-cue { display: flex; align-items: center; justify-content: space-between; gap: .65rem; font-size: .8125rem; line-height: 1.4; }
+.reserve-exchange-cue > span:not(.gv-mini-piece) { flex: 1; }
+.reserve-exchange-cue .gv-mini-piece { flex: 0 0 auto; }
+.market-recycle-cue { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: .8125rem; line-height: 1.4; }
+.gv-recycle-card { min-width: 0; width: 100%; cursor: grab; touch-action: none; user-select: none; }
+.gv-recycle-card.is-drop-target { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 6px; }
+.gv-recycle-card .gv-market-card { display: grid; color: var(--card-ink); background: var(--card); cursor: grab; }
+.gv-recycle-card .gv-market-card.black { color: #ecebdc; background: #303631; }
+.gv-recycle-card .gv-reward { gap: .25rem; }
+.gv-recycle-card .gv-reward b { font-size: .6875rem; white-space: nowrap; }
+.gv-recycle-arrows { display: flex; justify-content: space-between; gap: .2rem; margin-top: .3rem; }
+.gv-recycle-arrows button { flex: 1; min-width: 0; min-height: 36px; padding: .2rem; }
+.gv-recycle-arrows button:disabled { opacity: .3; cursor: not-allowed; }
+.gv-recycle-row-controls { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.gv-recycle-row-controls .primary-button { border-color: var(--amber); background: color-mix(in srgb, var(--amber), var(--table) 88%); }
+.gv-market { scroll-margin-top: 75px; }
+.gv-board-cell:not(.hole):not(.occupied) { box-shadow: inset 0 0 0 1px #52695c88; }
+.gv-action-tokens { animation: turn-ready .35s ease-out; }
+@keyframes turn-ready { from { opacity: .3; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 1050px) {
+  .gv-reserve.is-choosing { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .guide-nudge { gap: .5rem; padding: .4rem .5rem; align-items: start; font-size: .75rem; }
+  .guide-nudge strong { display: block; }
+  .guide-nudge button { flex: 0 0 auto; min-height: 36px; padding: .25rem .4rem; }
+  .guide-rules { padding: .65rem; }
+  .gv-player.is-active > .gv-board-content > .gv-dock .gv-dock-actions { grid-column: 1 / -1; }
+  .gv-player.is-active > .gv-board-content > .gv-dock .gv-piece-controls > small { max-width: 125px; width: auto; }
+  .gv-reserve.is-choosing { padding: .5rem; grid-template-columns: 1fr; }
+  .gv-reserve.is-choosing .gv-reserve-tray { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .gv-reserve.is-choosing .gv-reserve-piece { min-height: 58px; }
+  .gv-recycle-card .gv-market-card { height: 82px; min-height: 82px; }
+  .gv-recycle-card .gv-reward { gap: .15rem; font-size: .625rem; }
+  .gv-recycle-card .gv-reward b { font-size: .6rem; }
+  .gv-recycle-arrows button { min-height: 44px; }
+  .gv-recycle-row-controls button { min-height: 44px; }
+}

@@ -1,0 +1,648 @@
+{
+  "schemaVersion": 1,
+  "set": "base-game",
+  "synthetic": false,
+  "source": {
+    "title": "Boardcubator All Puzzles (November 2023)",
+    "url": "https://drive.google.com/file/d/10-10J5Cs584eoKPhg_AaXMjE43Znmi8F/view",
+    "resourcesUrl": "https://www.boardcubator.com/resources/",
+    "sha256": "cc5fedc6b7d4011cb0c42724f9ab1eee0e4c70fd67c795eeb8ef7537ef8c8d01",
+    "page": 1,
+    "panel": "BASE GAME",
+    "reviewedOn": "2026-10-12"
+  },
+  "puzzles": [
+    {
+      "id": "base-01",
+      "sourceNumber": 1,
+      "deck": "white",
+      "points": 2,
+      "reward": "domino",
+      "mask": [
+        "###",
+        ".#.",
+        ".#."
+      ]
+    },
+    {
+      "id": "base-02",
+      "sourceNumber": 2,
+      "deck": "white",
+      "points": 2,
+      "reward": "tri-corner",
+      "mask": [
+        "#..",
+        "##.",
+        "###",
+        "#.."
+      ]
+    },
+    {
+      "id": "base-03",
+      "sourceNumber": 3,
+      "deck": "white",
+      "points": 2,
+      "reward": "tri-line",
+      "mask": [
+        "##.",
+        "##.",
+        "###"
+      ]
+    },
+    {
+      "id": "base-04",
+      "sourceNumber": 4,
+      "deck": "white",
+      "points": 2,
+      "reward": "tet-zigzag",
+      "mask": [
+        ".#.",
+        ".##",
+        "###",
+        ".##"
+      ]
+    },
+    {
+      "id": "base-05",
+      "sourceNumber": 5,
+      "deck": "white",
+      "points": 2,
+      "reward": "tet-line",
+      "mask": [
+        "#..",
+        "###",
+        "###",
+        ".##"
+      ]
+    },
+    {
+      "id": "base-06",
+      "sourceNumber": 6,
+      "deck": "white",
+      "points": 2,
+      "reward": "tet-l",
+      "mask": [
+        ".#.",
+        "###",
+        "###",
+        ".#."
+      ]
+    },
+    {
+      "id": "base-07",
+      "sourceNumber": 7,
+      "deck": "white",
+      "points": 2,
+      "reward": "tet-square",
+      "mask": [
+        "####.",
+        ".####"
+      ]
+    },
+    {
+      "id": "base-08",
+      "sourceNumber": 8,
+      "deck": "white",
+      "points": 2,
+      "reward": "tet-t",
+      "mask": [
+        "##..",
+        "####",
+        "..##"
+      ]
+    },
+    {
+      "id": "base-09",
+      "sourceNumber": 9,
+      "deck": "white",
+      "points": 1,
+      "reward": "single",
+      "mask": [
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-10",
+      "sourceNumber": 10,
+      "deck": "white",
+      "points": 1,
+      "reward": "domino",
+      "mask": [
+        "#",
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-11",
+      "sourceNumber": 11,
+      "deck": "white",
+      "points": 1,
+      "reward": "domino",
+      "mask": [
+        ".#",
+        "##"
+      ]
+    },
+    {
+      "id": "base-12",
+      "sourceNumber": 12,
+      "deck": "white",
+      "points": 1,
+      "reward": "domino",
+      "mask": [
+        "###",
+        ".#."
+      ]
+    },
+    {
+      "id": "base-13",
+      "sourceNumber": 13,
+      "deck": "white",
+      "points": 1,
+      "reward": "tri-corner",
+      "mask": [
+        "##.",
+        ".##",
+        "..#"
+      ]
+    },
+    {
+      "id": "base-14",
+      "sourceNumber": 14,
+      "deck": "white",
+      "points": 1,
+      "reward": "tri-corner",
+      "mask": [
+        "#.#",
+        "###"
+      ]
+    },
+    {
+      "id": "base-15",
+      "sourceNumber": 15,
+      "deck": "white",
+      "points": 1,
+      "reward": "tri-line",
+      "mask": [
+        "#####"
+      ]
+    },
+    {
+      "id": "base-16",
+      "sourceNumber": 16,
+      "deck": "white",
+      "points": 1,
+      "reward": "tri-line",
+      "mask": [
+        "##.",
+        "###"
+      ]
+    },
+    {
+      "id": "base-17",
+      "sourceNumber": 17,
+      "deck": "white",
+      "points": 1,
+      "reward": "tet-zigzag",
+      "mask": [
+        ".##.",
+        "####"
+      ]
+    },
+    {
+      "id": "base-18",
+      "sourceNumber": 18,
+      "deck": "white",
+      "points": 1,
+      "reward": "tet-line",
+      "mask": [
+        "#..",
+        "#.#",
+        "###"
+      ]
+    },
+    {
+      "id": "base-19",
+      "sourceNumber": 19,
+      "deck": "white",
+      "points": 1,
+      "reward": "tet-l",
+      "mask": [
+        "#..",
+        "##.",
+        "###"
+      ]
+    },
+    {
+      "id": "base-20",
+      "sourceNumber": 20,
+      "deck": "white",
+      "points": 1,
+      "reward": "tet-square",
+      "mask": [
+        "#..",
+        "#..",
+        "#..",
+        "###"
+      ]
+    },
+    {
+      "id": "base-21",
+      "sourceNumber": 21,
+      "deck": "white",
+      "points": 1,
+      "reward": "tet-t",
+      "mask": [
+        "..#",
+        "###",
+        "##."
+      ]
+    },
+    {
+      "id": "base-22",
+      "sourceNumber": 22,
+      "deck": "white",
+      "points": 0,
+      "reward": "domino",
+      "mask": [
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-23",
+      "sourceNumber": 23,
+      "deck": "white",
+      "points": 0,
+      "reward": "domino",
+      "mask": [
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-24",
+      "sourceNumber": 24,
+      "deck": "white",
+      "points": 0,
+      "reward": "tri-corner",
+      "mask": [
+        "#.",
+        "##"
+      ]
+    },
+    {
+      "id": "base-25",
+      "sourceNumber": 25,
+      "deck": "white",
+      "points": 0,
+      "reward": "tri-corner",
+      "mask": [
+        "#",
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-26",
+      "sourceNumber": 26,
+      "deck": "white",
+      "points": 0,
+      "reward": "tri-line",
+      "mask": [
+        "##",
+        ".#"
+      ]
+    },
+    {
+      "id": "base-27",
+      "sourceNumber": 27,
+      "deck": "white",
+      "points": 0,
+      "reward": "tri-line",
+      "mask": [
+        "###"
+      ]
+    },
+    {
+      "id": "base-28",
+      "sourceNumber": 28,
+      "deck": "white",
+      "points": 0,
+      "reward": "tet-zigzag",
+      "mask": [
+        "##.",
+        ".##"
+      ]
+    },
+    {
+      "id": "base-29",
+      "sourceNumber": 29,
+      "deck": "white",
+      "points": 0,
+      "reward": "tet-line",
+      "mask": [
+        "#",
+        "#",
+        "#",
+        "#"
+      ]
+    },
+    {
+      "id": "base-30",
+      "sourceNumber": 30,
+      "deck": "white",
+      "points": 0,
+      "reward": "tet-l",
+      "mask": [
+        "#.",
+        "#.",
+        "##"
+      ]
+    },
+    {
+      "id": "base-31",
+      "sourceNumber": 31,
+      "deck": "white",
+      "points": 0,
+      "reward": "tet-square",
+      "mask": [
+        "##",
+        "##"
+      ]
+    },
+    {
+      "id": "base-32",
+      "sourceNumber": 32,
+      "deck": "white",
+      "points": 0,
+      "reward": "tet-t",
+      "mask": [
+        ".#.",
+        "###"
+      ]
+    },
+    {
+      "id": "base-33",
+      "sourceNumber": 33,
+      "deck": "black",
+      "points": 5,
+      "reward": "single",
+      "mask": [
+        "..##.",
+        "####.",
+        ".####",
+        ".####",
+        ".##.."
+      ]
+    },
+    {
+      "id": "base-34",
+      "sourceNumber": 34,
+      "deck": "black",
+      "points": 5,
+      "reward": "single",
+      "mask": [
+        "####.",
+        ".####",
+        ".####",
+        "####."
+      ]
+    },
+    {
+      "id": "base-35",
+      "sourceNumber": 35,
+      "deck": "black",
+      "points": 5,
+      "reward": "single",
+      "mask": [
+        "..#..",
+        "#####",
+        "#####",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-36",
+      "sourceNumber": 36,
+      "deck": "black",
+      "points": 5,
+      "reward": "single",
+      "mask": [
+        ".####",
+        ".####",
+        "####.",
+        "####."
+      ]
+    },
+    {
+      "id": "base-37",
+      "sourceNumber": 37,
+      "deck": "black",
+      "points": 5,
+      "reward": "single",
+      "mask": [
+        ".###.",
+        "#####",
+        "#####",
+        ".###."
+      ]
+    },
+    {
+      "id": "base-38",
+      "sourceNumber": 38,
+      "deck": "black",
+      "points": 4,
+      "reward": "single",
+      "mask": [
+        ".#.",
+        ".##",
+        "###",
+        "###",
+        "###"
+      ]
+    },
+    {
+      "id": "base-39",
+      "sourceNumber": 39,
+      "deck": "black",
+      "points": 4,
+      "reward": "domino",
+      "mask": [
+        ".#...",
+        ".###.",
+        ".###.",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-40",
+      "sourceNumber": 40,
+      "deck": "black",
+      "points": 4,
+      "reward": "domino",
+      "mask": [
+        "...#.",
+        "..##.",
+        "####.",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-41",
+      "sourceNumber": 41,
+      "deck": "black",
+      "points": 4,
+      "reward": "tri-corner",
+      "mask": [
+        ".###.",
+        "#####",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-42",
+      "sourceNumber": 42,
+      "deck": "black",
+      "points": 4,
+      "reward": "tri-corner",
+      "mask": [
+        "..#..",
+        ".##..",
+        ".##..",
+        ".###.",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-43",
+      "sourceNumber": 43,
+      "deck": "black",
+      "points": 4,
+      "reward": "tri-line",
+      "mask": [
+        "....#",
+        "#####",
+        "#####",
+        "..###"
+      ]
+    },
+    {
+      "id": "base-44",
+      "sourceNumber": 44,
+      "deck": "black",
+      "points": 4,
+      "reward": "tri-line",
+      "mask": [
+        "...##",
+        "..###",
+        ".####",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-45",
+      "sourceNumber": 45,
+      "deck": "black",
+      "points": 3,
+      "reward": "domino",
+      "mask": [
+        "###..",
+        "#####"
+      ]
+    },
+    {
+      "id": "base-46",
+      "sourceNumber": 46,
+      "deck": "black",
+      "points": 3,
+      "reward": "tri-corner",
+      "mask": [
+        ".##.",
+        "###.",
+        "####"
+      ]
+    },
+    {
+      "id": "base-47",
+      "sourceNumber": 47,
+      "deck": "black",
+      "points": 3,
+      "reward": "tri-line",
+      "mask": [
+        "#..",
+        "##.",
+        "###",
+        "###"
+      ]
+    },
+    {
+      "id": "base-48",
+      "sourceNumber": 48,
+      "deck": "black",
+      "points": 3,
+      "reward": "tet-zigzag",
+      "mask": [
+        "#...",
+        "##..",
+        "###.",
+        "####"
+      ]
+    },
+    {
+      "id": "base-49",
+      "sourceNumber": 49,
+      "deck": "black",
+      "points": 3,
+      "reward": "tet-line",
+      "mask": [
+        "##.",
+        "###",
+        "###",
+        "##."
+      ]
+    },
+    {
+      "id": "base-50",
+      "sourceNumber": 50,
+      "deck": "black",
+      "points": 3,
+      "reward": "tet-l",
+      "mask": [
+        "##.",
+        "##.",
+        "###",
+        "###"
+      ]
+    },
+    {
+      "id": "base-51",
+      "sourceNumber": 51,
+      "deck": "black",
+      "points": 3,
+      "reward": "tet-square",
+      "mask": [
+        ".#.",
+        "##.",
+        "##.",
+        "###",
+        "###"
+      ]
+    },
+    {
+      "id": "base-52",
+      "sourceNumber": 52,
+      "deck": "black",
+      "points": 3,
+      "reward": "tet-t",
+      "mask": [
+        ".##",
+        "###",
+        "###",
+        "###"
+      ]
+    }
+  ]
+}

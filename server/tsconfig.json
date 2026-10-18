@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "strict": true, "skipLibCheck": true, "types": ["node"],
+    "rootDir": "..", "outDir": "../dist-server", "noEmitOnError": true,
+    "verbatimModuleSyntax": true, "noUnusedLocals": true, "noUnusedParameters": true
+  },
+  "include": ["./index.ts", "./room-service.ts", "../src/online/protocol.ts", "../src/game/**/*.ts"]
+}

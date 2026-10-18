@@ -1,0 +1,36 @@
+{
+  "name": "project-l",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/start-dev.mjs",
+    "dev": "vite",
+    "server:dev": "npm run server:build && node --watch dist-server/server/index.js",
+    "server:build": "rm -rf dist-server && tsc -p server/tsconfig.json",
+    "server:start": "node dist-server/server/index.js",
+    "build": "tsc -b && npm run server:build && vite build",
+    "lint": "oxlint",
+    "test": "rm -rf .game-tests && tsc -p tsconfig.test.json && node --test .game-tests/tests/*.test.js",
+    "preview": "vite preview",
+    "typecheck": "tsc -b && tsc -p server/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}
